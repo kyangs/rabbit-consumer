@@ -1,0 +1,8 @@
+.idea
+idea/
+*.swp
+.DS_Store
+var/tpl/*
+vendor/
+var/log
+.settings/

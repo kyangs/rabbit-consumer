@@ -1,0 +1,4 @@
+github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271 h1:WhxRHzgeVGETMlmVfqhRn8RIeeNoPr2Czh33I4Zdccw=
+github.com/streadway/amqp v0.0.0-20190827072141-edfb9018d271/go.mod h1:AZpEONHx3DKn8O/DFsRAY58/XVQiIPMTMB1SddzLXVw=
+github.com/yakaa/log4g v1.1.8 h1:o+FudvNg2Eqpf+0kJbMUZ6NmBH2XtQdFcvEQyQSbMxg=
+github.com/yakaa/log4g v1.1.8/go.mod h1:deJqm1H9I6R4W2sTrWc4LkLtGHiMGplIRrKvJmaDPkA=

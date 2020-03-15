@@ -1,0 +1,18 @@
+{
+  "Log4g": {
+    "Path": "logs",
+    "Stdout": true
+  },
+  "RabbitMq": {
+    "DataSource": "amqp://guest:guest@127.0.0.1:5672",
+    "QueueName": "go_queue",
+    "Consumer": "go_queue_consumer",
+    "Exchange": "go_exchange",
+    "AutoAck": true,
+    "Durable": false,
+    "AutoDelete": false,
+    "Exclusive": false,
+    "NoLocal": false,
+    "NoWait": false
+  }
+}
