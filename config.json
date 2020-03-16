@@ -4,7 +4,7 @@
     "Stdout": true
   },
   "RabbitMq": {
-    "DataSource": "amqp://guest:guest@127.0.0.1:5672",
+    "DataSource": "amqp://admin:admin123@127.0.0.1:5672",
     "QueueName": "go_queue",
     "Consumer": "go_queue_consumer",
     "Exchange": "go_exchange",

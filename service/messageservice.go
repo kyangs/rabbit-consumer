@@ -20,6 +20,10 @@ func NewMessageService(messageModel *model.MessagesModel) *MessageService {
 }
 
 func (s *MessageService) ConsumerMessage(message *rabbitmq.Message) error {
+	if message.Type == rabbitmq.TypePong {
+		log4g.Info("receive pong message")
+		return nil
+	}
 	if message.Delay > 0 && message.IsDelay == false {
 		message.IsDelay = true
 		return s.messageModel.PublishDelayMessage(message)

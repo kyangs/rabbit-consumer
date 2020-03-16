@@ -14,7 +14,7 @@ import (
 	"github.com/yakaa/log4g"
 )
 
-var configFile = flag.String("c", "config/config.json", "Please set config file")
+var configFile = flag.String("c", "config.json", "Please set config file")
 
 func main() {
 	flag.Parse()
@@ -30,6 +30,9 @@ func main() {
 	publisher, err := rabbitmq.BuildPublisher(conf.RabbitMq)
 	if err != nil {
 		log.Fatalf("create publisher err %+v", err)
+	}
+	if err := publisher.Push(&rabbitmq.Message{Type: rabbitmq.TypePong}); err != nil {
+		log.Fatalf("send pong err %+v", err)
 	}
 	consumer, err := rabbitmq.BuildConsumer(
 		conf.RabbitMq,

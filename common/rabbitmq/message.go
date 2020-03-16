@@ -17,7 +17,8 @@ type (
 
 const (
 	ContentType      string = "Content-Type:application/json"
-	HttpType         string = "HTTP"
+	TypePong         string = "pong"
+	TypeMessage      string = "message"
 	DefaultRetryTime int64  = 5000
 	DefaultDelayKey  string = "x-delay"
 )
