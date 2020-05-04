@@ -120,6 +120,5 @@ func (p *Publisher) Close() {
 		if err := p.amqpDial.Close(); err != nil {
 			log4g.InfoFormat("Publisher conn Close err %+v by receive dead signal", err)
 		}
-		os.Exit(1)
 	}()
 }

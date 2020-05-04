@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"consumer/config"
 	"github.com/streadway/amqp"
@@ -14,33 +15,21 @@ type (
 	Consumer struct {
 		amqpDial     *amqp.Connection
 		amqpDialCh   *amqp.Channel
-		stop         chan bool
 		consumerFunc ConsumerFunc
+		consumerName string
 		conf         config.RabbitMq
 	}
 	ConsumerFunc func(message *Message) error
+
+	ConsumerPool struct {
+		Pool []*Consumer
+		stop chan bool
+	}
 )
 
-func BuildConsumer(conf config.RabbitMq, consumerFunc ConsumerFunc) (*Consumer, error) {
-	amqpDial, err := amqp.Dial(conf.DataSource)
-	if err != nil {
-		return nil, err
-	}
-	ch, err := amqpDial.Channel()
-	if err != nil {
-		return nil, err
-	}
-	return &Consumer{
-		amqpDial:     amqpDial,
-		stop:         make(chan bool),
-		consumerFunc: consumerFunc,
-		amqpDialCh:   ch,
-		conf:         conf,
-	}, nil
-}
-func (c *Consumer) StartConsume() error {
+func (c *Consumer) MessageConsume() (func(), error) {
 	if err := c.amqpDialCh.Qos(1, 0, false); err != nil {
-		return err
+		return nil, err
 	}
 	response, err := c.amqpDialCh.Consume(
 		c.conf.QueueName,
@@ -52,47 +41,93 @@ func (c *Consumer) StartConsume() error {
 		QueueDelayedTable,
 	)
 	if err != nil {
-		return err
+		log4g.ErrorFormat("%s create consumer channel  fail %+v", c.consumerName, err)
+		return nil, err
 	}
-	go func() {
+	return func() {
+		log4g.InfoFormat("%s created ", c.consumerName)
 		for d := range response {
 			message := new(Message)
 			if err := json.Unmarshal(d.Body, message); err != nil {
-				log4g.ErrorFormat("Err Message format %+v", err)
+				log4g.ErrorFormat("%s Err Message format %+v", c.consumerName, err)
 				continue
 			}
-			log4g.InfoFormat("start Consume message %+v", message)
+			log4g.InfoFormat("%s start Consume message %+v", c.consumerName, message)
 			if err := c.consumerFunc(message); err != nil {
-				log4g.ErrorFormat("Consume Message Err %+v", err)
+				log4g.ErrorFormat("%s Consume Message err %+v", c.consumerName, err)
 				continue
 			}
 		}
-	}()
-	<-c.stop
-	return nil
+	}, nil
 }
 
-func (c *Consumer) Run() error {
-	log4g.InfoFormat("consumer start run..., listen queue name is %s", c.conf.QueueName)
-	c.Close()
-	if err := c.StartConsume(); err != nil {
-		return err
+func BuildConsumerPool(conf config.RabbitMq, consumerFunc ConsumerFunc, amount int) (*ConsumerPool, error) {
+	cp := &ConsumerPool{Pool: []*Consumer(nil), stop: make(chan bool)}
+	for i := 0; i < amount; i++ {
+		c, err := buildConsumer(conf, consumerFunc, conf.Consumer+"_"+strconv.Itoa(i))
+		if err != nil {
+			return nil, err
+		}
+		cp.put(c)
 	}
+	return cp, nil
+}
+
+func (cp *ConsumerPool) put(c *Consumer) {
+	cp.Pool = append(cp.Pool, c)
+}
+
+func (cp *ConsumerPool) Run() error {
+	log4g.InfoFormat("consumer pool start run...")
+	for _, consumer := range cp.Pool {
+		messageFunc, err := consumer.MessageConsume()
+		if err != nil {
+			return err
+		}
+		go messageFunc()
+	}
+	cp.Close()
+	<-cp.stop
 	return nil
 }
 
-func (c *Consumer) Close() {
+func (cp *ConsumerPool) Close() {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, DeadSignal...)
 	go func() {
-		log4g.InfoFormat("Consumer receive dead signal %+v ", <-ch)
-		if err := c.amqpDialCh.Close(); err != nil {
-			log4g.ErrorFormat("c.amqpDialCh.Close err %+v", err)
+		log4g.InfoFormat("ConsumerPool receive dead signal %+v ", <-ch)
+		for _, consumer := range cp.Pool {
+			if err := consumer.amqpDialCh.Close(); err != nil {
+				log4g.ErrorFormat("%s ConsumerPool amqpDialCh.Close err %+v ", consumer.consumerName, err)
+			} else {
+				log4g.InfoFormat("%s ConsumerPool  Close channel success", consumer.consumerName)
+			}
+
+			if err := consumer.amqpDial.Close(); err != nil {
+				log4g.ErrorFormat("%s ConsumerPool conn Close err %+v by receive dead signal", consumer.consumerName, err)
+			} else {
+				log4g.InfoFormat("%s ConsumerPool  Close Dial success", consumer.consumerName)
+			}
 		}
-		if err := c.amqpDial.Close(); err != nil {
-			log4g.InfoFormat("Consumer conn Close err %+v by receive dead signal", err)
-		}
-		c.stop <- true
+		cp.stop <- true
 		os.Exit(1)
 	}()
+}
+
+func buildConsumer(conf config.RabbitMq, consumerFunc ConsumerFunc, consumerName string) (*Consumer, error) {
+	amqpDial, err := amqp.Dial(conf.DataSource)
+	if err != nil {
+		return nil, err
+	}
+	ch, err := amqpDial.Channel()
+	if err != nil {
+		return nil, err
+	}
+	return &Consumer{
+		amqpDial:     amqpDial,
+		consumerFunc: consumerFunc,
+		amqpDialCh:   ch,
+		consumerName: consumerName,
+		conf:         conf,
+	}, nil
 }

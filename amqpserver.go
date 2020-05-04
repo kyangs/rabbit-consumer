@@ -34,13 +34,14 @@ func main() {
 	if err := publisher.Push(&rabbitmq.Message{Type: rabbitmq.TypePong}); err != nil {
 		log.Fatalf("send pong err %+v", err)
 	}
-	consumer, err := rabbitmq.BuildConsumer(
+	consumerPool, err := rabbitmq.BuildConsumerPool(
 		conf.RabbitMq,
 		service.NewMessageService(model.NewMessagesModel(publisher)).ConsumerMessage,
+		conf.RabbitMq.ConsumerAmount,
 	)
 	publisher.Close()
 	if err != nil {
 		log.Fatalf("create publisher fail %+v", err)
 	}
-	log4g.Error(consumer.Run())
+	log4g.Error(consumerPool.Run())
 }
