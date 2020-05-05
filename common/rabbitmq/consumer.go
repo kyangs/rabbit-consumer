@@ -27,40 +27,6 @@ type (
 	}
 )
 
-func (c *Consumer) MessageConsume() (func(), error) {
-	if err := c.amqpDialCh.Qos(1, 0, false); err != nil {
-		return nil, err
-	}
-	response, err := c.amqpDialCh.Consume(
-		c.conf.QueueName,
-		c.conf.Consumer,
-		c.conf.AutoAck,
-		c.conf.Exclusive,
-		c.conf.NoLocal,
-		c.conf.NoWait,
-		QueueDelayedTable,
-	)
-	if err != nil {
-		log4g.ErrorFormat("%s create consumer channel  fail %+v", c.consumerName, err)
-		return nil, err
-	}
-	return func() {
-		log4g.InfoFormat("%s created ", c.consumerName)
-		for d := range response {
-			message := new(Message)
-			if err := json.Unmarshal(d.Body, message); err != nil {
-				log4g.ErrorFormat("%s Err Message format %+v", c.consumerName, err)
-				continue
-			}
-			log4g.InfoFormat("%s start Consume message %+v", c.consumerName, message)
-			if err := c.consumerFunc(message); err != nil {
-				log4g.ErrorFormat("%s Consume Message err %+v", c.consumerName, err)
-				continue
-			}
-		}
-	}, nil
-}
-
 func BuildConsumerPool(conf config.RabbitMq, consumerFunc ConsumerFunc, amount int) (*ConsumerPool, error) {
 	cp := &ConsumerPool{Pool: []*Consumer(nil), stop: make(chan bool)}
 	for i := 0; i < amount; i++ {
@@ -79,12 +45,38 @@ func (cp *ConsumerPool) put(c *Consumer) {
 
 func (cp *ConsumerPool) Run() error {
 	log4g.InfoFormat("consumer pool start run...")
-	for _, consumer := range cp.Pool {
-		messageFunc, err := consumer.MessageConsume()
-		if err != nil {
+	for _, c := range cp.Pool {
+		if err := c.amqpDialCh.Qos(1, 0, false); err != nil {
 			return err
 		}
-		go messageFunc()
+		response, err := c.amqpDialCh.Consume(
+			c.conf.QueueName,
+			c.conf.Consumer,
+			c.conf.AutoAck,
+			c.conf.Exclusive,
+			c.conf.NoLocal,
+			c.conf.NoWait,
+			QueueDelayedTable,
+		)
+		if err != nil {
+			log4g.ErrorFormat("%s create consumer channel  fail %+v", c.consumerName, err)
+			return err
+		}
+		log4g.InfoFormat("%s created ", c.consumerName)
+		go func(consumer *Consumer, m <-chan amqp.Delivery) {
+			for d := range m {
+				message := new(Message)
+				if err := json.Unmarshal(d.Body, message); err != nil {
+					log4g.ErrorFormat("%s Err Message format %+v", consumer.consumerName, err)
+					continue
+				}
+				log4g.InfoFormat("%s start Consume message %+v", consumer.consumerName, message)
+				if err := c.consumerFunc(message); err != nil {
+					log4g.ErrorFormat("%s Consume Message err %+v", consumer.consumerName, err)
+					continue
+				}
+			}
+		}(c, response)
 	}
 	cp.Close()
 	<-cp.stop
