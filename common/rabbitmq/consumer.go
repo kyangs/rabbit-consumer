@@ -45,6 +45,7 @@ func (cp *ConsumerPool) put(c *Consumer) {
 
 func (cp *ConsumerPool) Run() error {
 	log4g.InfoFormat("consumer pool start run...")
+	cp.Close()
 	for _, c := range cp.Pool {
 		if err := c.amqpDialCh.Qos(1, 0, false); err != nil {
 			return err
@@ -78,7 +79,6 @@ func (cp *ConsumerPool) Run() error {
 			}
 		}(c, response)
 	}
-	cp.Close()
 	<-cp.stop
 	return nil
 }

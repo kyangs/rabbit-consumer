@@ -43,5 +43,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("create publisher fail %+v", err)
 	}
-	log4g.Error(consumerPool.Run())
+	log.Fatal(consumerPool.Run())
 }
