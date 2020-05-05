@@ -30,7 +30,7 @@ type (
 func BuildConsumerPool(conf config.RabbitMq, consumerFunc ConsumerFunc, amount int) (*ConsumerPool, error) {
 	cp := &ConsumerPool{Pool: []*Consumer(nil), stop: make(chan bool)}
 	for i := 0; i < amount; i++ {
-		c, err := buildConsumer(conf, consumerFunc, conf.Consumer+"_"+strconv.Itoa(i))
+		c, err := buildConsumer(conf, consumerFunc, conf.Consumer+"_"+strconv.Itoa(i+1))
 		if err != nil {
 			return nil, err
 		}
