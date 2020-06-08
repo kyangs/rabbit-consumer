@@ -6,4 +6,7 @@ type (
 	BaseMessageConsumerService interface {
 		ConsumerMessage(message *rabbitmq.Message) error
 	}
+	BaseAlarmService interface {
+		send(content string)
+	}
 )

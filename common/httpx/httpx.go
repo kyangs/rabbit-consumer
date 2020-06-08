@@ -1,6 +1,7 @@
 package httpx
 
 import (
+	"crypto/tls"
 	"net/http"
 	"time"
 )
@@ -12,6 +13,9 @@ type (
 var (
 	HttpClient = &http.Client{
 		Timeout: 3 * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
 	}
 )
 

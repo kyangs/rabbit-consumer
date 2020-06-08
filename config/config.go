@@ -12,6 +12,7 @@ type (
 		ErpMysql   Mysql
 		RomeoMysql Mysql
 		RsaCert    RsaCert
+		DingTalk   DingTalk
 	}
 
 	RabbitMq struct {
@@ -35,5 +36,10 @@ type (
 	}
 	Mysql struct {
 		DataSource string
+	}
+	// 钉钉 机器 人
+
+	DingTalk struct {
+		WebHook []string
 	}
 )

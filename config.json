@@ -15,5 +15,8 @@
     "Exclusive": false,
     "NoLocal": false,
     "NoWait": false
+  },
+  "DingTalk": {
+    "WebHook": []
   }
 }

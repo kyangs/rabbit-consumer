@@ -34,9 +34,11 @@ func main() {
 	if err := publisher.Push(&rabbitmq.Message{Type: rabbitmq.TypePong}); err != nil {
 		log.Fatalf("send pong err %+v", err)
 	}
+	dingTalkAlarmService := &service.DingTalkAlarmService{Conf: conf.DingTalk}
+
 	consumerPool, err := rabbitmq.BuildConsumerPool(
 		conf.RabbitMq,
-		service.NewMessageService(model.NewMessagesModel(publisher)).ConsumerMessage,
+		service.NewMessageService(model.NewMessagesModel(publisher), dingTalkAlarmService).ConsumerMessage,
 		conf.RabbitMq.ConsumerAmount,
 	)
 	publisher.Close()
