@@ -32,18 +32,18 @@ func (s *MessageService) ConsumerMessage(message *rabbitmq.Message) error {
 		message.IsDelay = true
 		err := s.messageModel.PublishDelayMessage(message)
 		if err != nil {
-			s.sendAlarm("发送延时消息对列失败，请检查对列")
+			s.sendAlarm("【消息消费】发送延时消息对列失败，请检查对列")
 		}
 		return err
 	}
 	if responseStatus, err := utils.HttpRequest(httpx.HttpMethodPost, message.Url, message.Data); err != nil || responseStatus == false {
 		log4g.ErrorFormat("http send message Error %+v", err)
-		s.sendAlarm("发送请求到URL：" + message.Url + "失败，原因：" + err.Error())
+		s.sendAlarm("【消息消费】发送请求到URL：" + message.Url + "失败，原因：" + err.Error())
 		if message.RetryTime > 0 {
 			message.Delay = message.RetryTime
 			err := s.messageModel.PublishDelayMessage(message)
 			if err != nil {
-				s.sendAlarm("发送请求失败后启动延时重试，但发送消息到重试队列失败")
+				s.sendAlarm("【消息消费】发送请求失败后启动延时重试，但发送消息到重试队列失败")
 			}
 			return err
 		}
