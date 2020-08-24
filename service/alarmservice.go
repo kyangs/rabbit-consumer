@@ -8,8 +8,8 @@ import (
 )
 
 type (
-	DingTalkAlarmService struct {
-		Conf config.DingTalk
+	WebHookAlarmService struct {
+		Conf config.Hook
 	}
 	TextMessage struct {
 		Content string `json:"content"`
@@ -21,7 +21,7 @@ type (
 )
 
 // 发送DingTalk 报警消息
-func (d *DingTalkAlarmService) send(content string) {
+func (d *WebHookAlarmService) send(content string) {
 
 	if len(d.Conf.WebHook) == 0 {
 		return

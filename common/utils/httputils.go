@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"consumer/common/httpx"
@@ -37,4 +38,15 @@ func HttpRequest(method httpx.HttpMethod, url string, param interface{}) (bool, 
 		return false, err
 	}
 	return resp.Status == httpx.HttpStatus200 || strings.TrimSpace(string(body)) == httpx.HttpResponseSuccessStatus, nil
+}
+
+func Exists(path string) bool {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
 }

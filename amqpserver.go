@@ -1,12 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"io/ioutil"
 	"log"
 
 	"consumer/common/rabbitmq"
+	"consumer/common/utils"
 	"consumer/config"
 	"consumer/model"
 	"consumer/service"
@@ -18,14 +17,15 @@ var configFile = flag.String("c", "config.json", "Please set config file")
 
 func main() {
 	flag.Parse()
-	body, err := ioutil.ReadFile(*configFile)
+	filePath := ""
+	if utils.Exists(*configFile) {
+		filePath = *configFile
+	}
+	conf, err := config.ParseConfig(filePath)
 	if err != nil {
-		log.Fatalf("read file %s: %s", *configFile, err)
+		log.Fatalf("ParseConfig %+v", err)
 	}
-	conf := new(config.Config)
-	if err := json.Unmarshal(body, conf); err != nil {
-		log.Fatalf("json.Unmarshal %s: %s", *configFile, err)
-	}
+
 	log4g.Init(conf.Log4g)
 	publisher, err := rabbitmq.BuildPublisher(conf.RabbitMq)
 	if err != nil {
@@ -34,7 +34,7 @@ func main() {
 	if err := publisher.Push(&rabbitmq.Message{Type: rabbitmq.TypePong}); err != nil {
 		log.Fatalf("send pong err %+v", err)
 	}
-	dingTalkAlarmService := &service.DingTalkAlarmService{Conf: conf.DingTalk}
+	dingTalkAlarmService := &service.WebHookAlarmService{Conf: conf.Hook}
 
 	consumerPool, err := rabbitmq.BuildConsumerPool(
 		conf.RabbitMq,

@@ -16,7 +16,7 @@
     "NoLocal": false,
     "NoWait": false
   },
-  "DingTalk": {
+  "Hook": {
     "WebHook": []
   }
 }
