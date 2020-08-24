@@ -54,6 +54,7 @@ var configFile = flag.String("c", "", "Please set config file")
 func ParseConfig() (*Config, error) {
 	flag.Parse()
 
+	fmt.Printf("configFile %s\n", *configFile)
 	if utils.Exists(*configFile) {
 		return parseConfigFormFile(*configFile)
 	}
