@@ -1,11 +1,9 @@
 package main
 
 import (
-	"flag"
 	"log"
 
 	"consumer/common/rabbitmq"
-	"consumer/common/utils"
 	"consumer/config"
 	"consumer/model"
 	"consumer/service"
@@ -13,15 +11,9 @@ import (
 	"github.com/yakaa/log4g"
 )
 
-var configFile = flag.String("c", "config.json", "Please set config file")
-
 func main() {
-	flag.Parse()
-	filePath := ""
-	if utils.Exists(*configFile) {
-		filePath = *configFile
-	}
-	conf, err := config.ParseConfig(filePath)
+
+	conf, err := config.ParseConfig()
 	if err != nil {
 		log.Fatalf("ParseConfig %+v", err)
 	}

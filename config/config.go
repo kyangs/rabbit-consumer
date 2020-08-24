@@ -3,12 +3,14 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 
+	"consumer/common/utils"
 	"github.com/yakaa/log4g"
 )
 
@@ -47,11 +49,15 @@ type (
 	}
 )
 
-func ParseConfig(filePath string) (*Config, error) {
+var configFile = flag.String("c", "", "Please set config file")
 
-	if filePath != "" {
-		return parseConfigFormFile(filePath)
+func ParseConfig() (*Config, error) {
+	flag.Parse()
+
+	if utils.Exists(*configFile) {
+		return parseConfigFormFile(*configFile)
 	}
+
 	from := os.Getenv("CONFIG_FROM")
 	fmt.Printf("CONFIG_FROM : %s \n", from)
 	if from == "" {
