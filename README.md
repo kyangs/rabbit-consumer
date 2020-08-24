@@ -127,3 +127,10 @@ https://g.digi800.com/kyang1/amqp-consumer
 
 
 
+
+## docker 打包
+
+
+docker build -t kyangs/rabbit-consumer:2.0.2 .
+docker tag  kyangs/rabbit-consumer:2.0.2 kyangs/rabbit-consumer:2.0.2 
+docker push kyangs/rabbit-consumer:2.0.2 
