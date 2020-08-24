@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -52,6 +53,7 @@ func ParseConfig(filePath string) (*Config, error) {
 		return parseConfigFormFile(filePath)
 	}
 	from := os.Getenv("CONFIG_FROM")
+	fmt.Printf("CONFIG_FROM : %s \n", from)
 	if from == "" {
 		from = "file"
 	}
@@ -84,7 +86,7 @@ func parseConfigFormEnv() (*Config, error) {
 	host := os.Getenv("MQ_HOST")
 	queueName := os.Getenv("QUEUE_NAME")
 	exchange := os.Getenv("EXCHANGE_NAME")
-
+	fmt.Printf("MQ_HOST : %s ,QUEUE_NAME: %s , EXCHANGE_NAME : %s", host, queueName, exchange)
 	if host == "" || queueName == "" || exchange == "" {
 		return nil, errors.New("请设置环境变量MQ_HOST=xxxxxx:xx ,QUEUE_NAME=xx, EXCHANGE_NAME=xxx")
 	}
