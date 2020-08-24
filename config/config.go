@@ -60,21 +60,18 @@ func ParseConfig() (*Config, error) {
 	}
 
 	from := os.Getenv("CONFIG_FROM")
-	fmt.Printf("CONFIG_FROM : %s \n", from)
+
 	if from == "" {
 		from = "file"
 	}
-	var config *Config
-	var err error
+	fmt.Printf(from + "-----\n")
 	switch from {
 	case "file":
-		config, err = parseConfigFormFile(os.Getenv("CONFIG_FILE"))
-		break
+		return parseConfigFormFile(os.Getenv("CONFIG_FILE"))
 	case "env":
-		config, err = parseConfigFormEnv()
-		break
+		return parseConfigFormEnv()
 	}
-	return config, err
+	return nil, errors.New("config is error")
 }
 
 func parseConfigFormFile(filePath string) (*Config, error) {
@@ -118,10 +115,12 @@ func parseConfigFormEnv() (*Config, error) {
 	noLocal, _ := strconv.ParseBool(os.Getenv("MQ_NO_LOCAL"))    // NoLocal
 	noWait, _ := strconv.ParseBool(os.Getenv("MQ_NO_WAIT"))      // NoWait
 	hooks := strings.Split(",", os.Getenv("WEB_HOOK"))
+	log4gStdout, _ := strconv.ParseBool(os.Getenv("LOG_STDOUT"))
 
 	return &Config{
 		Log4g: log4g.Config{
-			Path: logPath,
+			Path:   logPath,
+			Stdout: log4gStdout,
 		},
 		RabbitMq: RabbitMq{
 			DataSource:     host,
